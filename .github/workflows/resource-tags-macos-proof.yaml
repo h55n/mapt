@@ -1,4 +1,4 @@
-name: resource-tags-macos-bounded-proof
+name: resource-tags-macos-intel-proof
 on:
   push:
     branches: [test-resource-tags-macos-20261101]
@@ -7,10 +7,10 @@ permissions:
   contents: read
 jobs:
   native-macos:
-    runs-on: macos-15
-    timeout-minutes: 120
+    runs-on: macos-15-intel
+    timeout-minutes: 360
     env:
-      GOMAXPROCS: '2'
+      GOMAXPROCS: '4'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -19,8 +19,8 @@ jobs:
         with:
           go-version: '1.27'
           cache: true
-      - name: Native build with bounded package parallelism
-        run: go build -p 1 ./cmd/mapt
+      - name: Native Intel build with bounded package parallelism
+        run: go build -v -p 2 ./cmd/mapt
       - name: Native full tests
         env:
           CGO_ENABLED: '1'
