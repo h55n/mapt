@@ -1,0 +1,45 @@
+name: Rebase resource tags Nov18
+on:
+  push:
+    branches: [verify/resource-tags-nov18]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27'
+          cache: true
+      - name: Build
+        run: make build GCFLAGS=""
+      - name: Full tests
+        run: make test
+      - name: Lint
+        run: make lint
+      - name: Repeated race regression
+        run: go test -race -p 1 --tags build ./pkg/manager/context -count=25
+      - name: Formatting and whitespace guards
+        run: |
+          test -z "$(gofmt -l pkg/manager/context/context.go pkg/manager/context/context_test.go)"
+          git diff --check 2468ae11281dc23f569feec58bcc429acb68d900...HEAD
+          git diff --exit-code
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27'
+          cache: true
+      - name: Native build and full tests
+        shell: bash
+        run: |
+          go build -p 1 ./cmd/mapt
+          GOMAXPROCS=1 CGO_ENABLED=1 go test -p 1 --tags build -v ./pkg/... ./cmd/... -skip github.com/mapt-oss/pulumi-ibmcloud/sdk/go/...
