@@ -1,0 +1,31 @@
+name: Rebase resource tags Nov18
+on:
+  push:
+    branches: [verify/resource-tags-latest-nov18]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27'
+          cache: true
+      - name: Build
+        run: make build GCFLAGS=""
+      - name: Full tests
+        run: make test
+      - name: Lint
+        run: make lint
+      - name: Repeated race regression
+        run: go test -race -p 1 --tags build ./pkg/manager/context -count=25
+      - name: Formatting and whitespace guards
+        run: |
+          test -z "$(gofmt -l pkg/manager/context/context.go pkg/manager/context/context_test.go)"
+          git diff --check 0b8dd205829ff9ae4a425e8ef9698f15ca7de360...HEAD
+          git diff --exit-code
