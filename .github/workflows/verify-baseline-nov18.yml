@@ -1,0 +1,21 @@
+name: Rebase Windows baseline Nov18
+on:
+  push:
+    branches: [verify/resource-tags-baseline-nov18]
+permissions:
+  contents: read
+jobs:
+  baseline-windows:
+    runs-on: windows-2025
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 2468ae11281dc23f569feec58bcc429acb68d900
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27'
+          cache: true
+      - name: Untouched main full tests
+        shell: bash
+        run: GOMAXPROCS=1 CGO_ENABLED=1 go test -p 1 --tags build -v ./pkg/... ./cmd/... -skip github.com/mapt-oss/pulumi-ibmcloud/sdk/go/...
